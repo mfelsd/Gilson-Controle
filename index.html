@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Gestão Integrada - Primo</title>
+<title>Gestão Integrada - FC Transportes</title>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
@@ -16,6 +16,7 @@
     --danger: #ef4444;
     --bg: #f8fafc;
     --text: #334155;
+    --received-bg: #f0fdf4; /* Verde bem clarinho para recebidos */
   }
 
   body {
@@ -38,22 +39,18 @@
 
   .header-left { display: flex; justify-content: flex-start; }
   .header-right { display: flex; justify-content: flex-end; }
-
   header h1 { margin: 0; font-size: 18px; text-align: center; }
   
   .btn-voltar {
     background: transparent;
-    padding: 10px 10px 10px 0;
+    padding: 10px;
     border: none;
     color: white;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: none; 
-    transition: opacity 0.2s;
   }
-
-  .btn-voltar:active { opacity: 0.6; }
 
   .container { padding: 20px; }
 
@@ -77,13 +74,10 @@
   .mod-card h2 { margin: 10px 0 5px 0; font-size: 22px; }
   .mod-card p { margin: 0; color: #64748b; font-size: 14px; }
   
-  .icon-truck { color: var(--truck); font-size: 40px; }
-  .icon-card { color: var(--card); font-size: 40px; }
-
   .view { display: none; }
   .view.active { display: block; }
 
-  input, select {
+  input {
     width: 100%;
     padding: 12px;
     margin-bottom: 12px;
@@ -105,8 +99,8 @@
   }
 
   .btn-add { background: var(--secondary); margin-bottom: 20px;}
-  .btn-action { background: var(--card); margin-top: 10px; }
-  .btn-danger { background: var(--danger); margin-top: 10px; }
+  .btn-action { background: var(--card); }
+  .btn-danger { background: var(--danger); }
 
   .item-card {
     background: white;
@@ -114,12 +108,16 @@
     border-radius: 12px;
     margin-bottom: 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-    border-left: 4px solid var(--secondary);
-    transition: transform 0.1s;
+    border-left: 4px solid var(--truck);
     position: relative;
+    transition: background 0.3s;
   }
-  
-  .item-card:active { transform: scale(0.98); }
+
+  /* Estilo para frete já RECEBIDO */
+  .item-card.recebido {
+    background: var(--received-bg);
+    border-left-color: #94a3b8; /* Borda cinza para indicar finalizado */
+  }
 
   .resumo-box {
     background: white;
@@ -129,42 +127,10 @@
     text-align: center;
     border: 1px solid #e2e8f0;
   }
-  .resumo-box h3 { margin: 0; color: #64748b; font-size: 14px; text-transform: uppercase; }
-  .resumo-box .valor { font-size: 28px; font-weight: bold; color: var(--primary); margin-top: 5px; }
-
-  .projecao-box {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
-    margin-bottom: 40px;
-    border: 1px solid #e2e8f0;
-    border-left: 4px solid var(--primary);
-  }
-  .projecao-item {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #f1f5f9;
-    padding: 10px 0;
-    font-size: 15px;
-  }
-  .projecao-item:last-child { border-bottom: none; }
+  .resumo-box .valor { font-size: 28px; font-weight: bold; color: var(--primary); }
 
   .input-group { display: flex; gap: 10px; margin-bottom: 12px; }
   .input-group > * { margin-bottom: 0; }
-
-  .toggle-container {
-    display: flex; background: #e2e8f0; border-radius: 10px; padding: 4px; margin-bottom: 12px;
-  }
-  .toggle-container input[type="radio"] { display: none; }
-  .toggle-container label {
-    flex: 1; text-align: center; padding: 10px; font-size: 14px;
-    font-weight: 600; color: #64748b; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s ease-in-out;
-  }
-  .toggle-container input[type="radio"]:checked + label {
-    background: var(--secondary); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
 
   .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -174,62 +140,28 @@
   .modal-content {
     background: white; padding: 25px; border-radius: 16px;
     width: 90%; max-width: 400px; position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   }
-  .btn-fechar-modal {
-    position: absolute; top: 15px; right: 15px; background: #e2e8f0;
-    color: #64748b; border: none; border-radius: 50%; width: 30px; height: 30px;
-    font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
-  .modal-linha {
-    display: flex; justify-content: space-between; padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #475569;
-  }
-  .modal-linha.destaque { font-weight: bold; color: var(--primary); }
-  .modal-resultado {
-    text-align: center; margin-top: 15px; padding: 15px;
-    background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
-  }
-  .modal-resultado span { display: block; font-size: 14px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
-  .modal-resultado b { font-size: 24px; }
   
-  .item-card-bottom {
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px;
-  }
-  .card-costs-container { font-size: 13px; color: #64748b; }
-  
-  .btn-apagar-card-mini {
-    background: #fee2e2; color: #ef4444; border: none;
-    width: 36px; height: 36px; padding: 0; border-radius: 8px;
+  .btn-check-mini {
+    background: #dcfce7; color: #16a34a; border: none;
+    width: 36px; height: 36px; border-radius: 8px;
     font-size: 16px; cursor: pointer; display: flex;
-    justify-content: center; align-items: center; transition: background 0.2s; flex-shrink: 0;
+    justify-content: center; align-items: center;
   }
-  .btn-apagar-card-mini:hover { background: #fecaca; }
-
-  #sync-status {
-    font-size: 12px; color: #94a3b8; text-align: center; margin-top: 10px; display: none;
-  }
+  .btn-check-mini.ativo { background: var(--card); color: white; }
 
   #print-area { display: none; }
-
   @media print {
     body * { visibility: hidden; }
-    #print-area {
-      display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 10px; background: white;
-    }
-    #print-area, #print-area * { visibility: visible; }
-    body { background: white; }
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    #print-area { display: block; position: absolute; left: 0; top: 0; width: 100%; visibility: visible; }
+    #print-area * { visibility: visible; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-left">
-    <button class="btn-voltar" id="btn-voltar" onclick="abrirTela('dashboard')">◀ Voltar</button>
-  </div>
+  <div class="header-left"><button class="btn-voltar" id="btn-voltar" onclick="abrirTela('dashboard')">◀ Voltar</button></div>
   <h1 id="titulo-header">Dashboard</h1>
   <div class="header-right"></div>
 </header>
@@ -239,723 +171,191 @@
   <div id="dashboard" class="view active">
     <div class="dash-grid">
       <div class="mod-card" onclick="abrirTela('caminhao')">
-        <div class="icon-truck">🚚</div>
+        <div style="font-size: 40px;">🚚</div>
         <h2>Gestão Caminhão</h2>
-        <p>Receitas, despesas e lucros</p>
+        <p>Receitas e Recebíveis</p>
       </div>
-      
       <div class="mod-card" onclick="abrirTela('cartoes')">
-        <div class="icon-card">💳</div>
+        <div style="font-size: 40px;">💳</div>
         <h2>Meus Cartões</h2>
-        <p>Controle de faturas e parcelamentos</p>
+        <p>Faturas e Parcelas</p>
       </div>
     </div>
-    <div id="sync-status">Sincronizando com a nuvem... ☁️</div>
   </div>
 
   <div id="caminhao" class="view">
-    <div class="resumo-box" style="padding: 15px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-        <span style="font-size: 14px; color: #64748b; font-weight: bold;">Mês de Exibição:</span>
-        <input id="cam-mes-filtro" type="month" onchange="renderCaminhao()" style="width: auto; padding: 6px; margin: 0; text-align: center; font-weight: bold; font-family: inherit;">
+    <div class="resumo-box">
+      <div style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        <input id="cam-mes-filtro" type="month" onchange="renderCaminhao()" style="width: auto; font-weight: bold; border: none; background: transparent;">
       </div>
-
-      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-        <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0; padding-right: 10px;">
-          <div style="font-size: 12px; color: #64748b; text-transform: uppercase;">Total Faturado</div>
-          <div style="font-size: 16px; font-weight: bold; color: var(--card);" id="cam-total-frete">R$ 0,00</div>
-        </div>
-        <div style="text-align: center; flex: 1; padding-left: 10px;">
-          <div style="font-size: 12px; color: #64748b; text-transform: uppercase;">Total Custos</div>
-          <div style="font-size: 16px; font-weight: bold; color: var(--danger);" id="cam-total-custo">R$ 0,00</div>
-        </div>
+      <div style="display: flex; justify-content: space-around; margin-bottom: 10px;">
+        <div><small>Faturado</small><br><b id="cam-total-frete">R$ 0,00</b></div>
+        <div><small>Custos</small><br><b id="cam-total-custo" style="color: var(--danger)">R$ 0,00</b></div>
       </div>
-      
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <h3 style="margin: 0 0 5px 0; font-size: 13px;">LUCRO LÍQUIDO</h3>
-        <div class="valor" id="total-caminhao" style="font-size: 26px; color: var(--primary);">R$ 0,00</div>
-      </div>
+      <div style="font-size: 12px; color: #64748b; text-transform: uppercase;">Lucro Estimado</div>
+      <div class="valor" id="total-caminhao">R$ 0,00</div>
     </div>
 
     <div style="background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
       <div class="input-group">
-        <input id="cam-data" type="date" style="width: 40%;">
-        <input id="cam-desc" placeholder="Descrição da Viagem" style="width: 60%;">
+        <input id="cam-data" type="date">
+        <input id="cam-desc" placeholder="Descrição da Viagem">
       </div>
-      
       <div class="input-group">
-        <input id="cam-frete" type="number" step="0.01" placeholder="Valor do Frete (Receita)">
-        <input id="cam-diesel" type="number" step="0.01" placeholder="Custo do Diesel">
+        <input id="cam-frete" type="number" step="0.01" placeholder="Valor Frete">
+        <input id="cam-diesel" type="number" step="0.01" placeholder="Diesel">
       </div>
-
       <div class="input-group">
-        <input id="cam-motorista" type="number" step="0.01" placeholder="Custo Motorista">
-        <input id="cam-ajudante" type="number" step="0.01" placeholder="Custo Ajudante">
+        <input id="cam-motorista" type="number" step="0.01" placeholder="Motorista">
+        <input id="cam-ajudante" type="number" step="0.01" placeholder="Ajudante">
       </div>
-      
-      <button class="btn-add" onclick="addCaminhao()" style="margin-bottom: 0;">➕ Registrar Lançamento</button>
+      <button class="btn-add" onclick="addCaminhao()">➕ Salvar Frete</button>
     </div>
 
     <div id="lista-caminhao"></div>
-    <button class="btn-action" onclick="imprimirRelatorio()" style="margin-top: 10px; margin-bottom: 40px; background: var(--primary);">📄 Gerar Relatório em PDF</button>
-  </div>
-
-  <div id="cartoes" class="view">
-    
-    <div class="resumo-box" style="padding: 15px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 13px; color: #64748b;">Dia da Virada:</span>
-        <input id="diaVirada" type="number" min="1" max="31" onchange="salvarConfigCartao()" style="width: 60px; padding: 4px; margin: 0; text-align: center;">
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-        <span style="font-size: 13px; color: #64748b;">Dia do Vencimento:</span>
-        <input id="diaVencimento" type="number" min="1" max="31" onchange="salvarConfigCartao()" style="width: 60px; padding: 4px; margin: 0; text-align: center;">
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <span style="font-size: 14px; font-weight: bold; color: var(--primary);">Fatura de:</span>
-        <input id="car-mes-filtro" type="month" onchange="renderCartoes()" style="width: auto; padding: 6px; margin: 0; text-align: center; font-weight: bold;">
-      </div>
-
-      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; position: relative;">
-        <h3 style="margin: 0 0 5px 0; font-size: 13px;">TOTAL DA FATURA</h3>
-        <div class="valor" id="total-cartoes" style="font-size: 26px; color: var(--primary);">R$ 0,00</div>
-        <div id="status-fatura" style="position: absolute; top: 15px; right: 15px; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 12px; background: #e2e8f0; color: #64748b;">CARREGANDO</div>
-      </div>
-    </div>
-
-    <div style="background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-      <input id="nome" placeholder="O que comprou? (ex: Pneus)">
-      <div class="toggle-container">
-        <input type="radio" id="opt-total" name="tipoValor" value="total" checked>
-        <label for="opt-total">Valor Total</label>
-        <input type="radio" id="opt-parcela" name="tipoValor" value="parcela">
-        <label for="opt-parcela">Valor da Parcela</label>
-      </div>
-      <div class="input-group">
-        <input id="valor" type="number" step="0.01" placeholder="Valor (R$)">
-        <input id="parcelas" type="number" placeholder="Parcelas">
-      </div>
-      <div class="input-group" style="align-items: center;">
-         <div style="flex: 1;">
-            <label style="font-size: 12px; color: #64748b; margin-bottom: 4px; display: block;">Mês 1ª Parcela:</label>
-            <input id="car-mes-inicio" type="month" style="margin-bottom: 0;">
-         </div>
-         <div style="flex: 1;">
-            <label style="font-size: 12px; color: #64748b; margin-bottom: 4px; display: block;">Cartão:</label>
-            <input id="cartao" placeholder="Ex: Nubank" style="margin-bottom: 0;">
-         </div>
-      </div>
-      <button class="btn-add" onclick="addCartao()" style="margin-bottom: 0; margin-top: 15px;">➕ Adicionar Dívida</button>
-    </div>
-
-    <button style="background: var(--text); margin-bottom: 20px;" onclick="pagarFaturaMes()">✅ Marcar toda esta Fatura como Paga</button>
-
-    <div id="lista-cartoes"></div>
-    
-    <div id="projecao-container" class="projecao-box"></div>
-
   </div>
 
 </div>
 
 <div id="modal-caminhao" class="modal-overlay" style="display:none;">
   <div class="modal-content">
-    <button class="btn-fechar-modal" onclick="fecharModalCaminhao()">X</button>
-    <h2 id="modal-desc" style="margin-top: 0; color: var(--primary); font-size: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Descrição</h2>
-    <div class="modal-linha destaque"><span>Receita (Frete):</span> <span id="modal-frete" style="color: var(--card);">R$ 0,00</span></div>
-    <div class="modal-linha"><span>Custo Diesel:</span> <span id="modal-diesel" style="color: var(--danger);">- R$ 0,00</span></div>
-    <div class="modal-linha"><span>Custo Motorista:</span> <span id="modal-motorista" style="color: var(--danger);">- R$ 0,00</span></div>
-    <div class="modal-linha"><span>Custo Ajudante:</span> <span id="modal-ajudante" style="color: var(--danger);">- R$ 0,00</span></div>
-    <div class="modal-resultado"><span>Valor que Sobrou</span><b id="modal-sobrou">R$ 0,00</b></div>
-    <button class="btn-danger" style="margin-top: 20px;" onclick="excluirCaminhaoModal()">🗑️ Excluir este Lançamento</button>
-  </div>
-</div>
-
-<div id="modal-excluir-cartao" class="modal-overlay" style="display:none;">
-  <div class="modal-content" style="text-align: center;">
-    <h2 style="margin-top: 0; color: var(--primary); font-size: 20px;">Excluir Parcelamento</h2>
-    <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Esta é uma compra parcelada. O que você deseja fazer?</p>
-    
-    <button class="btn-danger" style="margin-bottom: 10px;" onclick="confirmarExclusaoCartao('todas')">🗑️ Apagar TODAS as parcelas</button>
-    <button class="btn-action" style="background: var(--truck); margin-bottom: 15px;" onclick="confirmarExclusaoCartao('uma')">🗑️ Apagar APENAS deste mês</button>
-    
-    <button style="background: #e2e8f0; color: #475569;" onclick="fecharModalExcluirCartao()">Cancelar</button>
+    <h2 id="modal-desc"></h2>
+    <div id="modal-dados"></div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn-action" style="background: var(--secondary);" onclick="imprimirCobranca()">📄 Cobrança</button>
+        <button class="btn-danger" onclick="excluirCaminhao()">🗑️ Apagar</button>
+    </div>
+    <button style="background: #eee; color: #333; margin-top: 10px;" onclick="fecharModal()">Fechar</button>
   </div>
 </div>
 
 <div id="print-area"></div>
 
 <script>
-// ==========================================
-// CONFIGURAÇÃO SUPABASE
-// ==========================================
 const SUPABASE_URL = 'https://uxlsqihdxeszwmpwdwbx.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_CPnv5ZKLevPYoypi3sMFkw_RwoOT2Bq'; 
-
 const banco = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const syncStatus = document.getElementById('sync-status');
 
-async function carregarDaNuvem() {
-  try {
-    syncStatus.style.display = 'block';
-    
-    let { data: camData } = await banco.from('caminhao').select('*');
-    if (camData && camData.length > 0) {
-      dadosCaminhao = camData;
-      localStorage.setItem("caminhao", JSON.stringify(dadosCaminhao));
-    }
-
-    let { data: carData } = await banco.from('cartoes').select('*');
-    if (carData && carData.length > 0) {
-      dadosCartoes = carData;
-      localStorage.setItem("parcelas", JSON.stringify(dadosCartoes));
-    }
-
-    syncStatus.style.display = 'none';
-    
-    if(document.getElementById('caminhao').classList.contains('active')) renderCaminhao();
-    if(document.getElementById('cartoes').classList.contains('active')) renderCartoes();
-    
-  } catch(e) {
-    console.error("Erro na nuvem, rodando offline", e);
-    syncStatus.style.display = 'none';
-  }
-}
-
-carregarDaNuvem();
-
-function calcularFaturaAtual() {
-   let hoje = new Date();
-   let diaVirada = parseInt(document.getElementById("diaVirada").value) || 10;
-   let mesReal = hoje.getMonth();
-   let anoReal = hoje.getFullYear();
-
-   if (hoje.getDate() > diaVirada) {
-     mesReal++; 
-     if (mesReal > 11) { mesReal = 0; anoReal++; }
-   }
-   let mesFormatado = (mesReal + 1).toString().padStart(2, '0');
-   return `${anoReal}-${mesFormatado}`;
-}
-
-function preencherDatasIniciais() {
-  let hoje = new Date();
-  let ano = hoje.getFullYear();
-  let mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
-  let dia = hoje.getDate().toString().padStart(2, '0');
-
-  let camData = document.getElementById("cam-data");
-  if(camData) camData.value = `${ano}-${mes}-${dia}`;
-  let camFiltro = document.getElementById("cam-mes-filtro");
-  if(camFiltro) camFiltro.value = `${ano}-${mes}`;
-
-  let faturaAtiva = calcularFaturaAtual();
-  let carFiltro = document.getElementById("car-mes-filtro");
-  if(carFiltro) carFiltro.value = faturaAtiva;
-  let carMesInicio = document.getElementById("car-mes-inicio");
-  if(carMesInicio) carMesInicio.value = faturaAtiva;
-}
-
-function abrirTela(telaId) {
-  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-  document.getElementById(telaId).classList.add('active');
-  
-  const btnVoltar = document.getElementById('btn-voltar');
-  const titulo = document.getElementById('titulo-header');
-  
-  if (telaId === 'dashboard') {
-    btnVoltar.style.display = 'none';
-    titulo.innerText = 'Dashboard';
-  } else if (telaId === 'caminhao') {
-    btnVoltar.style.display = 'block';
-    titulo.innerText = '🚚 Gestão Caminhão';
-    renderCaminhao(); 
-  } else if (telaId === 'cartoes') {
-    btnVoltar.style.display = 'block';
-    titulo.innerText = '💳 Controle de Cartões';
-    renderCartoes(); 
-  }
-}
-
-// ==========================================
-// MÓDULO CAMINHÃO
-// ==========================================
 let dadosCaminhao = JSON.parse(localStorage.getItem("caminhao")) || [];
-let idModalAtual = ""; 
+let idAtual = "";
 
-async function salvarCaminhao(novoItem = null, idRemover = null) {
-  localStorage.setItem("caminhao", JSON.stringify(dadosCaminhao));
-  try {
-    if(novoItem) await banco.from('caminhao').upsert([novoItem]);
-    if(idRemover) await banco.from('caminhao').delete().eq('id', idRemover);
-  } catch(e) { console.log("Salvo apenas offline"); }
+async function carregar() {
+    let { data } = await banco.from('caminhao').select('*');
+    if (data) { dadosCaminhao = data; localStorage.setItem("caminhao", JSON.stringify(data)); }
+    renderCaminhao();
+}
+
+function abrirTela(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('btn-voltar').style.display = id === 'dashboard' ? 'none' : 'block';
+    document.getElementById('titulo-header').innerText = id === 'caminhao' ? '🚚 Gestão Caminhão' : 'Dashboard';
 }
 
 function addCaminhao() {
-  let dataVal = document.getElementById("cam-data").value;
-  let desc = document.getElementById("cam-desc").value;
-  let frete = parseFloat(document.getElementById("cam-frete").value) || 0;
-  let diesel = parseFloat(document.getElementById("cam-diesel").value) || 0;
-  let motorista = parseFloat(document.getElementById("cam-motorista").value) || 0;
-  let ajudante = parseFloat(document.getElementById("cam-ajudante").value) || 0;
+    const item = {
+        id: Math.random().toString(36).substr(2, 9),
+        data: document.getElementById("cam-data").value,
+        desc: document.getElementById("cam-desc").value,
+        frete: parseFloat(document.getElementById("cam-frete").value) || 0,
+        diesel: parseFloat(document.getElementById("cam-diesel").value) || 0,
+        motorista: parseFloat(document.getElementById("cam-motorista").value) || 0,
+        ajudante: parseFloat(document.getElementById("cam-ajudante").value) || 0,
+        recebido: false // Inicia sempre como não recebido
+    };
+    item.liquido = item.frete - (item.diesel + item.motorista + item.ajudante);
+    
+    dadosCaminhao.push(item);
+    salvar(item);
+    renderCaminhao();
+}
 
-  if(!desc || !dataVal || frete <= 0){ alert("Preencha data, descrição e frete."); return; }
+async function salvar(item) {
+    localStorage.setItem("caminhao", JSON.stringify(dadosCaminhao));
+    await banco.from('caminhao').upsert([item]);
+}
 
-  let liquido = frete - (diesel + motorista + ajudante);
-  let novoId = Math.random().toString(36).substr(2, 9); 
-
-  let novoRegistro = { id: novoId, data: dataVal, desc, frete, diesel, motorista, ajudante, liquido };
-  dadosCaminhao.push(novoRegistro);
-  salvarCaminhao(novoRegistro); 
-  
-  let mesCriado = dataVal.substring(0, 7); 
-  document.getElementById("cam-mes-filtro").value = mesCriado;
-
-  renderCaminhao();
-
-  document.getElementById("cam-desc").value = "";
-  document.getElementById("cam-frete").value = "";
-  document.getElementById("cam-diesel").value = "";
-  document.getElementById("cam-motorista").value = "";
-  document.getElementById("cam-ajudante").value = "";
-  preencherDatasIniciais(); 
+async function toggleRecebido(id, event) {
+    event.stopPropagation();
+    const index = dadosCaminhao.findIndex(v => v.id === id);
+    dadosCaminhao[index].recebido = !dadosCaminhao[index].recebido;
+    
+    await salvar(dadosCaminhao[index]);
+    renderCaminhao();
 }
 
 function renderCaminhao() {
-  let lista = document.getElementById("lista-caminhao");
-  lista.innerHTML = "";
-  let filtroMes = document.getElementById("cam-mes-filtro").value; 
-  if(!filtroMes) return;
-
-  let totalLiquido = 0, totalFaturado = 0, totalCustos = 0;
-
-  let filtrados = dadosCaminhao.filter(v => v.data && v.data.startsWith(filtroMes));
-  filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
-
-  if (filtrados.length === 0) {
-    lista.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:14px; margin-top:30px;">Nenhum lançamento no mês de ${filtroMes.split('-')[1]}/${filtroMes.split('-')[0]}.</p>`;
-  }
-
-  filtrados.forEach((viagem) => {
-    let custos = viagem.diesel + viagem.motorista + viagem.ajudante;
-    totalLiquido += viagem.liquido; totalFaturado += viagem.frete; totalCustos += custos;
+    const lista = document.getElementById("lista-caminhao");
+    const filtro = document.getElementById("cam-mes-filtro").value;
+    lista.innerHTML = "";
     
-    let corValor = viagem.liquido >= 0 ? 'var(--card)' : 'var(--danger)'; 
-    let dataCurta = `${viagem.data.split('-')[2]}/${viagem.data.split('-')[1]}`;
+    let tF = 0, tC = 0, tL = 0;
 
-    lista.innerHTML += `
-    <div class="item-card" onclick="abrirDetalhesCaminhao('${viagem.id}')" style="cursor: pointer; padding: 15px; border-left-color: var(--truck); margin-bottom: 15px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-weight: bold; font-size: 16px; color: var(--primary);">
-          <span style="color: #94a3b8; font-size: 13px; margin-right: 4px;">[${dataCurta}]</span> ${viagem.desc.toUpperCase()}
-        </span>
-        <span style="font-weight: bold; font-size: 18px; color: ${corValor};">R$ ${viagem.liquido.toFixed(2)}</span>
-      </div>
-      <div class="item-card-bottom">
-        <div class="card-costs-container">
-          <span style="display:block;">Frete: <b style="color: var(--card);">R$ ${viagem.frete.toFixed(2)}</b></span>
-          <span style="display:block; margin-top:3px;">Custos: <b style="color: var(--danger);">- R$ ${custos.toFixed(2)}</b></span>
-        </div>
-        <button class="btn-apagar-card-mini" onclick="event.stopPropagation(); excluirCaminhaoDireto('${viagem.id}')">🗑️</button>
-      </div>
-    </div>`;
-  });
-
-  document.getElementById("cam-total-frete").innerHTML = "R$ " + totalFaturado.toFixed(2);
-  document.getElementById("cam-total-custo").innerHTML = "R$ " + totalCustos.toFixed(2);
-  let elTotal = document.getElementById("total-caminhao");
-  elTotal.innerHTML = "R$ " + totalLiquido.toFixed(2);
-  elTotal.style.color = totalLiquido >= 0 ? "var(--primary)" : "var(--danger)";
-}
-
-function abrirDetalhesCaminhao(id) {
-  let v = dadosCaminhao.find(item => item.id === id);
-  if(!v) return;
-  idModalAtual = id;
-  let dataFormatada = `${v.data.split('-')[2]}/${v.data.split('-')[1]}/${v.data.split('-')[0]}`;
-
-  document.getElementById("modal-desc").innerHTML = `<span style="font-size:12px; color:#94a3b8; display:block;">${dataFormatada}</span>` + v.desc.toUpperCase();
-  document.getElementById("modal-frete").innerText = "R$ " + v.frete.toFixed(2);
-  document.getElementById("modal-diesel").innerText = "- R$ " + v.diesel.toFixed(2);
-  document.getElementById("modal-motorista").innerText = "- R$ " + v.motorista.toFixed(2);
-  document.getElementById("modal-ajudante").innerText = "- R$ " + v.ajudante.toFixed(2);
-  
-  let elSobrou = document.getElementById("modal-sobrou");
-  elSobrou.innerText = "R$ " + v.liquido.toFixed(2);
-  elSobrou.style.color = v.liquido >= 0 ? "var(--card)" : "var(--danger)";
-  document.getElementById("modal-caminhao").style.display = "flex";
-}
-
-function fecharModalCaminhao() { document.getElementById("modal-caminhao").style.display = "none"; }
-
-function excluirCaminhaoModal() {
-  if(confirm("Deseja apagar este lançamento?")) {
-    dadosCaminhao = dadosCaminhao.filter(v => v.id !== idModalAtual);
-    salvarCaminhao(null, idModalAtual); renderCaminhao(); fecharModalCaminhao();
-  }
-}
-
-function excluirCaminhaoDireto(id) {
-  if(confirm("Deseja apagar este lançamento?")) {
-    dadosCaminhao = dadosCaminhao.filter(v => v.id !== id);
-    salvarCaminhao(null, id); renderCaminhao();
-  }
-}
-
-function imprimirRelatorio() {
-  let filtroMes = document.getElementById("cam-mes-filtro").value; 
-  if(!filtroMes) { alert("Selecione um mês para o relatório."); return; }
-  let filtrados = dadosCaminhao.filter(v => v.data && v.data.startsWith(filtroMes));
-  filtrados.sort((a, b) => new Date(a.data) - new Date(b.data));
-  let totalLiquido = 0, totalFaturado = 0, totalCustos = 0;
-  filtrados.forEach(v => {
-    totalLiquido += v.liquido; totalFaturado += v.frete; totalCustos += (v.diesel + v.motorista + v.ajudante);
-  });
-  let splitMes = filtroMes.split('-');
-  let nomeMes = new Date(splitMes[0], splitMes[1] - 1, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-  nomeMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-
-  let html = `
-    <div style="text-align: center; margin-bottom: 30px;">
-      <h2 style="color: var(--primary); margin: 0; font-size: 24px;">Relatório de Fechamento</h2>
-      <p style="color: #64748b; font-size: 16px; margin-top: 5px; text-transform: capitalize;">${nomeMes}</p>
-    </div>
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
-        <span style="color: #64748b; font-size: 16px;">Total Faturado:</span><span style="font-weight: bold; font-size: 16px; color: var(--card);">R$ ${totalFaturado.toFixed(2)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
-        <span style="color: #64748b; font-size: 16px;">Total de Custos:</span><span style="font-weight: bold; font-size: 16px; color: var(--danger);">- R$ ${totalCustos.toFixed(2)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; padding-bottom: 10px; margin-bottom: 10px;">
-        <span style="color: var(--primary); font-weight: bold; font-size: 18px;">Lucro Líquido:</span>
-        <span style="font-weight: bold; font-size: 20px; color: ${totalLiquido >= 0 ? 'var(--primary)' : 'var(--danger)'};">R$ ${totalLiquido.toFixed(2)}</span>
-      </div>
-      <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 20px;">
-        <h4 style="margin: 0 0 10px 0; color: #475569; text-align: center; font-size: 14px; text-transform: uppercase;">Divisão de Sócios (50% / 50%)</h4>
-        <div style="display: flex; justify-content: space-between;">
-          <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0;">
-            <span style="display: block; font-size: 13px; color: #64748b; margin-bottom: 4px;">Sócio 1</span><span style="font-weight: bold; color: var(--primary); font-size: 18px;">R$ ${(totalLiquido/2).toFixed(2)}</span>
-          </div>
-          <div style="text-align: center; flex: 1;">
-            <span style="display: block; font-size: 13px; color: #64748b; margin-bottom: 4px;">Sócio 2</span><span style="font-weight: bold; color: var(--primary); font-size: 18px;">R$ ${(totalLiquido/2).toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <h3 style="color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; font-size: 18px;">Detalhamento das Viagens</h3>`;
-
-  if(filtrados.length === 0) html += `<p style="text-align:center; color:#94a3b8; font-style: italic;">Nenhuma viagem neste mês.</p>`;
-
-  filtrados.forEach(v => {
-    let dataCurta = `${v.data.split('-')[2]}/${v.data.split('-')[1]}`;
-    let corValor = v.liquido >= 0 ? 'var(--card)' : 'var(--danger)'; 
-    html += `
-    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; page-break-inside: avoid;">
-      <h4 style="margin-top: 0; color: var(--primary); font-size: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px;">
-        <span style="color: #94a3b8; font-size: 13px; margin-right: 5px;">[${dataCurta}]</span> ${v.desc.toUpperCase()}
-      </h4>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #475569;"><span>Receita (Frete):</span> <span style="color: var(--card); font-weight: bold;">R$ ${v.frete.toFixed(2)}</span></div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #475569;"><span>Custo Diesel:</span> <span style="color: var(--danger);">- R$ ${v.diesel.toFixed(2)}</span></div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #475569;"><span>Custo Motorista:</span> <span style="color: var(--danger);">- R$ ${v.motorista.toFixed(2)}</span></div>
-      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; color: #475569;"><span>Custo Ajudante:</span> <span style="color: var(--danger);">- R$ ${v.ajudante.toFixed(2)}</span></div>
-      <div style="text-align: center; margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-        <span style="display: block; font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Sobrou na Viagem</span><b style="font-size: 20px; color: ${corValor};">R$ ${v.liquido.toFixed(2)}</b>
-      </div>
-    </div>`;
-  });
-  document.getElementById('print-area').innerHTML = html;
-  window.print();
-}
-
-// ==========================================
-// MÓDULO CARTÕES 
-// ==========================================
-let dadosCartoes = JSON.parse(localStorage.getItem("parcelas")) || [];
-let diaVirada = parseInt(localStorage.getItem("diaVirada")) || 10; 
-let diaVencimento = parseInt(localStorage.getItem("diaVencimento")) || 15;
-let idCartaoParaExcluir = null;
-
-document.getElementById("diaVirada").value = diaVirada;
-document.getElementById("diaVencimento").value = diaVencimento;
-
-async function salvarCartao(novosItens = null, idRemover = null, atualizarTodos = false) {
-  localStorage.setItem("parcelas", JSON.stringify(dadosCartoes));
-  try {
-    if (atualizarTodos) {
-      await banco.from('cartoes').upsert(dadosCartoes);
-    } else {
-      if(novosItens) {
-        let toUpsert = Array.isArray(novosItens) ? novosItens : [novosItens];
-        await banco.from('cartoes').upsert(toUpsert);
-      }
-      if(idRemover) await banco.from('cartoes').delete().eq('id', idRemover);
-    }
-  } catch(e) { console.log("Salvo apenas offline"); }
-}
-
-function salvarConfigCartao() {
-  let v = parseInt(document.getElementById("diaVirada").value);
-  let v2 = parseInt(document.getElementById("diaVencimento").value);
-  
-  if(v >= 1 && v <= 31 && v2 >= 1 && v2 <= 31) {
-    diaVirada = v; diaVencimento = v2;
-    localStorage.setItem("diaVirada", diaVirada);
-    localStorage.setItem("diaVencimento", diaVencimento);
-    preencherDatasIniciais();
-    renderCartoes(); 
-  } else {
-    alert("Insira dias válidos entre 1 e 31");
-  }
-}
-
-function addCartao() {
-  let nome = document.getElementById("nome").value;
-  let valorInput = parseFloat(document.getElementById("valor").value);
-  let parcelas = parseInt(document.getElementById("parcelas").value) || 1;
-  let cartao = document.getElementById("cartao").value;
-  let tipoValor = document.querySelector('input[name="tipoValor"]:checked').value;
-  let mesInicio = document.getElementById("car-mes-inicio").value;
-
-  if(!nome || isNaN(valorInput) || !mesInicio){
-    alert("Preencha nome, valor e o mês da primeira parcela."); return;
-  }
-
-  let valorParcela = tipoValor === "total" ? (valorInput / parcelas) : valorInput;
-  let [anoInicio, mesNumInicio] = mesInicio.split('-');
-  let a = parseInt(anoInicio);
-  let m = parseInt(mesNumInicio) - 1;
-
-  let novosRegistros = [];
-
-  for(let i = 0; i < parcelas; i++) {
-    let d = new Date(a, m + i, 1);
-    let anoStr = d.getFullYear();
-    let mesStr = (d.getMonth() + 1).toString().padStart(2, '0');
-    let mesFatura = `${anoStr}-${mesStr}`;
-    let nomeFinal = parcelas > 1 ? `${nome} (${i+1}/${parcelas})` : nome;
-    let novoId = Math.random().toString(36).substr(2, 9);
-
-    novosRegistros.push({
-      id: novoId,
-      mes: mesFatura,
-      nome: nomeFinal,
-      valor: valorParcela,
-      cartao: cartao || "Geral",
-      pago: false
-    });
-  }
-
-  dadosCartoes.push(...novosRegistros);
-  salvarCartao(novosRegistros, null, false); 
-  
-  document.getElementById("car-mes-filtro").value = mesInicio;
-  renderCartoes();
-
-  document.getElementById("nome").value = "";
-  document.getElementById("valor").value = "";
-  document.getElementById("parcelas").value = "";
-  document.getElementById("cartao").value = "";
-}
-
-function togglePagoCartao(id) {
-  let d = dadosCartoes.find(x => x.id === id);
-  if(d) {
-    d.pago = !d.pago;
-    salvarCartao(d, null, false);
-    renderCartoes();
-  }
-}
-
-function pagarFaturaMes() {
-  let filtroMes = document.getElementById("car-mes-filtro").value;
-  if(!confirm(`Deseja marcar TODAS as pendências da fatura de ${filtroMes} como pagas?`)) return;
-  
-  let alterados = [];
-  dadosCartoes.forEach(d => {
-    if(d.mes === filtroMes && !d.pago) {
-      d.pago = true;
-      alterados.push(d);
-    }
-  });
-
-  if(alterados.length > 0) {
-    salvarCartao(alterados, null, false); 
-    renderCartoes();
-  }
-}
-
-function excluirCartao(id) {
-  let item = dadosCartoes.find(v => v.id === id);
-  if(!item) return;
-
-  let regexParcela = /\s\(\d+\/\d+\)$/;
-  let isParcelado = item.nome.match(regexParcela);
-
-  if (isParcelado) {
-    idCartaoParaExcluir = id;
-    document.getElementById("modal-excluir-cartao").style.display = "flex";
-  } else {
-    if(confirm("Deseja excluir esta dívida?")) {
-      dadosCartoes = dadosCartoes.filter(v => v.id !== id);
-      salvarCartao(null, id); 
-      renderCartoes();
-    }
-  }
-}
-
-function fecharModalExcluirCartao() {
-  document.getElementById("modal-excluir-cartao").style.display = "none";
-  idCartaoParaExcluir = null;
-}
-
-async function confirmarExclusaoCartao(tipo) {
-  let id = idCartaoParaExcluir;
-  let item = dadosCartoes.find(v => v.id === id);
-  
-  fecharModalExcluirCartao(); 
-  
-  if(!item) return;
-
-  if (tipo === 'todas') {
-    let regexParcela = /\s\(\d+\/\d+\)$/;
-    let nomeBase = item.nome.replace(regexParcela, '');
-    let idsParaRemover = [];
-    
-    dadosCartoes = dadosCartoes.filter(v => {
-      let vBase = v.nome.replace(/\s\(\d+\/\d+\)$/, '');
-      if(vBase === nomeBase && v.cartao === item.cartao && v.valor === item.valor) {
-        idsParaRemover.push(v.id);
-        return false;
-      }
-      return true;
-    });
-    
-    localStorage.setItem("parcelas", JSON.stringify(dadosCartoes));
-    renderCartoes();
-    
-    try {
-      await banco.from('cartoes').delete().in('id', idsParaRemover);
-    } catch(e) { console.log("Erro ao apagar nuvem", e); }
-
-  } else if (tipo === 'uma') {
-    dadosCartoes = dadosCartoes.filter(v => v.id !== id);
-    salvarCartao(null, id); 
-    renderCartoes();
-  }
-}
-
-// NOVA FUNÇÃO: GERA A PROJEÇÃO GERAL DE TODOS OS MESES
-function gerarProjecao() {
-  let proj = {};
-
-  // Soma todas as faturas que NÃO estão pagas, separando por mês
-  dadosCartoes.forEach(d => {
-    if (!d.pago) {
-      if (!proj[d.mes]) proj[d.mes] = 0;
-      proj[d.mes] += d.valor;
-    }
-  });
-
-  let container = document.getElementById("projecao-container");
-  let html = "<h3 style='margin-top:0; color: #64748b; font-size: 14px; text-transform: uppercase;'>📊 Resumo de Faturas em Aberto</h3>";
-  
-  // Organiza os meses do mais antigo para o mais novo
-  let mesesOrdenados = Object.keys(proj).sort();
-
-  if (mesesOrdenados.length === 0) {
-    html += "<p style='color: #94a3b8; margin-bottom: 0;'>Você não possui nenhuma dívida futura. 🎉</p>";
-  } else {
-    mesesOrdenados.forEach(mesVal => {
-      let splitMes = mesVal.split('-');
-      let ano = parseInt(splitMes[0]);
-      let mesNum = parseInt(splitMes[1]) - 1;
-      let nomeMesFormatado = new Date(ano, mesNum, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-      nomeMesFormatado = nomeMesFormatado.charAt(0).toUpperCase() + nomeMesFormatado.slice(1);
-
-      html += `<div class="projecao-item"><span>${nomeMesFormatado}</span><b>R$ ${proj[mesVal].toFixed(2)}</b></div>`;
-    });
-  }
-  
-  if (container) container.innerHTML = html;
-}
-
-function renderCartoes() {
-  let lista = document.getElementById("lista-cartoes");
-  lista.innerHTML = "";
-  
-  let filtroMes = document.getElementById("car-mes-filtro").value;
-  if(!filtroMes) return;
-
-  let filtrados = dadosCartoes.filter(v => v.mes === filtroMes);
-  let total = 0;
-  let todosPagos = true;
-
-  if (filtrados.length === 0) {
-    lista.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:14px; margin-top:30px;">Nenhuma dívida para este mês.</p>`;
-    todosPagos = false;
-  }
-
-  filtrados.forEach(v => {
-    total += v.valor;
-    if (!v.pago) todosPagos = false;
-
-    let btnPagoStatus = v.pago ? 'Desfazer' : '✔ Pagar';
-    let btnPagoColor = v.pago ? '#94a3b8' : 'var(--card)';
-    let txtStyle = v.pago ? 'text-decoration: line-through; opacity: 0.5;' : '';
-
-    lista.innerHTML += `
-    <div class="item-card" style="border-left-color: ${v.pago ? '#94a3b8' : 'var(--secondary)'}; ${txtStyle}">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-weight: bold; font-size: 16px; color: var(--primary);">${v.nome.toUpperCase()}</span>
-        <span style="font-weight: bold; font-size: 16px; color: var(--primary);">R$ ${v.valor.toFixed(2)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 13px; color: #64748b;">Cartão: ${v.cartao}</span>
+    dadosCaminhao.filter(v => v.data.startsWith(filtro)).forEach(v => {
+        tF += v.frete; tC += (v.diesel + v.motorista + v.ajudante); tL += v.liquido;
         
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button style="width: 90px; min-width: 90px; max-width: 90px; padding: 6px 0; font-size: 13px; text-align: center; background: ${btnPagoColor}; flex-shrink: 0;" onclick="togglePagoCartao('${v.id}')">${btnPagoStatus}</button>
-          <button class="btn-apagar-card-mini" onclick="excluirCartao('${v.id}')">🗑️</button>
-        </div>
+        const cardClass = v.recebido ? 'item-card recebido' : 'item-card';
+        const checkClass = v.recebido ? 'btn-check-mini ativo' : 'btn-check-mini';
+        const statusTxt = v.recebido ? '<small style="color:var(--card)">Recebido</small>' : '<small style="color:#94a3b8">Pendente</small>';
 
-      </div>
-    </div>`;
-  });
+        lista.innerHTML += `
+            <div class="${cardClass}" onclick="abrirDetalhes('${v.id}')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-weight: bold;">${v.desc.toUpperCase()}</span><br>
+                        ${statusTxt}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <b style="color: var(--primary)">R$ ${v.frete.toFixed(2)}</b>
+                        <button class="${checkClass}" onclick="toggleRecebido('${v.id}', event)">✔</button>
+                    </div>
+                </div>
+            </div>`;
+    });
 
-  document.getElementById("total-cartoes").innerHTML = "R$ " + total.toFixed(2);
-
-  let elStatus = document.getElementById("status-fatura");
-  if (filtrados.length === 0) {
-     elStatus.innerText = "VAZIA";
-     elStatus.style.background = "#e2e8f0"; elStatus.style.color = "#64748b";
-  } else if (todosPagos) {
-     elStatus.innerText = "FATURA PAGA";
-     elStatus.style.background = "#dcfce7"; elStatus.style.color = "var(--card)";
-  } else {
-     let vAno = parseInt(filtroMes.split('-')[0]);
-     let vMes = parseInt(filtroMes.split('-')[1]) - 1;
-     let vDia = parseInt(document.getElementById('diaVencimento').value) || 15;
-     
-     let dataVencimento = new Date(vAno, vMes, vDia, 23, 59, 59);
-     let hoje = new Date();
-
-     if (hoje > dataVencimento) {
-        elStatus.innerText = "VENCIDA";
-        elStatus.style.background = "#fee2e2"; elStatus.style.color = "var(--danger)";
-     } else {
-        elStatus.innerText = "A PAGAR";
-        elStatus.style.background = "#dbeafe"; elStatus.style.color = "var(--secondary)";
-     }
-  }
-
-  // Atualiza a projeção sempre que a tela for renderizada
-  gerarProjecao();
+    document.getElementById("cam-total-frete").innerText = "R$ " + tF.toFixed(2);
+    document.getElementById("cam-total-custo").innerText = "R$ " + tC.toFixed(2);
+    document.getElementById("total-caminhao").innerText = "R$ " + tL.toFixed(2);
 }
 
-preencherDatasIniciais();
-abrirTela('dashboard');
+function abrirDetalhes(id) {
+    idAtual = id;
+    const v = dadosCaminhao.find(i => i.id === id);
+    document.getElementById("modal-desc").innerText = v.desc;
+    document.getElementById("modal-dados").innerHTML = `Data: ${v.data}<br>Frete: R$ ${v.frete}<br>Lucro: R$ ${v.liquido}`;
+    document.getElementById("modal-caminhao").style.display = "flex";
+}
 
+function fecharModal() { document.getElementById("modal-caminhao").style.display = "none"; }
+
+async function excluirCaminhao() {
+    if(confirm("Excluir?")) {
+        dadosCaminhao = dadosCaminhao.filter(v => v.id !== idAtual);
+        await banco.from('caminhao').delete().eq('id', idAtual);
+        localStorage.setItem("caminhao", JSON.stringify(dadosCaminhao));
+        fecharModal();
+        renderCaminhao();
+    }
+}
+
+function imprimirCobranca() {
+    const v = dadosCaminhao.find(i => i.id === idAtual);
+    const html = `<div style="padding:40px; border:2px solid #000;">
+        <h1>FC Transportes Logistica LTDA</h1>
+        <hr>
+        <p>Serviço: ${v.desc}</p>
+        <p>Data: ${v.data}</p>
+        <h2>VALOR: R$ ${v.frete.toFixed(2)}</h2>
+    </div>`;
+    document.getElementById("print-area").innerHTML = html;
+    window.print();
+}
+
+// Início
+const hoje = new Date();
+document.getElementById("cam-mes-filtro").value = hoje.toISOString().substr(0, 7);
+document.getElementById("cam-data").value = hoje.toISOString().substr(0, 10);
+carregar();
 </script>
 </body>
 </html>
