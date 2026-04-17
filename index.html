@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Sistema Integrado de Gestão">
 
+<audio id="audioCaminhao" src="caminhao.mp3"></audio>
+<audio id="audioCartoes" src="cartoes.mp3"></audio>
+
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
@@ -494,10 +497,16 @@ function abrirTela(telaId) {
     btnVoltar.style.display = 'none';
     titulo.innerText = 'Dashboard';
   } else if (telaId === 'caminhao') {
+    // Tocar voz de mulher: Gestão Caminhão
+    document.getElementById('audioCaminhao').play().catch(e => console.log("Erro ao tocar áudio"));
+    
     btnVoltar.style.display = 'block';
     titulo.innerText = '🚚 Gestão Caminhão';
     renderCaminhao(); 
   } else if (telaId === 'cartoes') {
+    // Tocar voz de mulher: Gestão Cartões
+    document.getElementById('audioCartoes').play().catch(e => console.log("Erro ao tocar áudio"));
+    
     btnVoltar.style.display = 'block';
     titulo.innerText = '💳 Controle de Cartões';
     renderCartoes(); 
