@@ -119,6 +119,12 @@
     position: relative;
   }
   
+  /* ESTILO PARA RECEBIDO - Fundo Verde Clarinho */
+  .item-card.recebido {
+    background-color: #f0fdf4 !important;
+    border-left-color: #94a3b8 !important;
+  }
+  
   .item-card:active { transform: scale(0.98); }
 
   .resumo-box {
@@ -198,6 +204,15 @@
     border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px;
   }
   .card-costs-container { font-size: 13px; color: #64748b; }
+
+  /* BOTÃO CHECK PARA STATUS */
+  .btn-check-mini {
+    background: #e2e8f0; color: #64748b; border: none;
+    width: 36px; height: 36px; border-radius: 8px;
+    font-size: 16px; cursor: pointer; display: flex;
+    justify-content: center; align-items: center; margin-right: 8px;
+  }
+  .btn-check-mini.ativo { background: var(--card); color: white; }
   
   .btn-apagar-card-mini {
     background: #fee2e2; color: #ef4444; border: none;
@@ -368,7 +383,10 @@
     <div class="modal-linha"><span>Custo Motorista:</span> <span id="modal-motorista" style="color: var(--danger);">- R$ 0,00</span></div>
     <div class="modal-linha"><span>Custo Ajudante:</span> <span id="modal-ajudante" style="color: var(--danger);">- R$ 0,00</span></div>
     <div class="modal-resultado"><span>Valor que Sobrou</span><b id="modal-sobrou">R$ 0,00</b></div>
-    <button class="btn-danger" style="margin-top: 20px;" onclick="excluirCaminhaoModal()">🗑️ Excluir este Lançamento</button>
+    
+    <button class="btn-action" style="background: var(--secondary); margin-top: 20px;" onclick="imprimirCobrancaIndividual()">📄 Gerar Cobrança (PDF)</button>
+    
+    <button class="btn-danger" style="margin-top: 10px;" onclick="excluirCaminhaoModal()">🗑️ Excluir este Lançamento</button>
   </div>
 </div>
 
@@ -505,7 +523,7 @@ function addCaminhao() {
   let liquido = frete - (diesel + motorista + ajudante);
   let novoId = Math.random().toString(36).substr(2, 9); 
 
-  let novoRegistro = { id: novoId, data: dataVal, desc, frete, diesel, motorista, ajudante, liquido };
+  let novoRegistro = { id: novoId, data: dataVal, desc, frete, diesel, motorista, ajudante, liquido, recebido: false };
   dadosCaminhao.push(novoRegistro);
   salvarCaminhao(novoRegistro); 
   
@@ -520,6 +538,16 @@ function addCaminhao() {
   document.getElementById("cam-motorista").value = "";
   document.getElementById("cam-ajudante").value = "";
   preencherDatasIniciais(); 
+}
+
+async function toggleRecebidoCaminhao(id, event) {
+  event.stopPropagation();
+  let item = dadosCaminhao.find(v => v.id === id);
+  if(item) {
+    item.recebido = !item.recebido;
+    await salvarCaminhao(item);
+    renderCaminhao();
+  }
 }
 
 function renderCaminhao() {
@@ -543,9 +571,11 @@ function renderCaminhao() {
     
     let corValor = viagem.liquido >= 0 ? 'var(--card)' : 'var(--danger)'; 
     let dataCurta = `${viagem.data.split('-')[2]}/${viagem.data.split('-')[1]}`;
+    let classeRecebido = viagem.recebido ? 'recebido' : '';
+    let classeCheck = viagem.recebido ? 'ativo' : '';
 
     lista.innerHTML += `
-    <div class="item-card" onclick="abrirDetalhesCaminhao('${viagem.id}')" style="cursor: pointer; padding: 15px; border-left-color: var(--truck); margin-bottom: 15px;">
+    <div class="item-card ${classeRecebido}" onclick="abrirDetalhesCaminhao('${viagem.id}')" style="cursor: pointer; padding: 15px; border-left-color: var(--truck); margin-bottom: 15px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <span style="font-weight: bold; font-size: 16px; color: var(--primary);">
           <span style="color: #94a3b8; font-size: 13px; margin-right: 4px;">[${dataCurta}]</span> ${viagem.desc.toUpperCase()}
@@ -557,7 +587,10 @@ function renderCaminhao() {
           <span style="display:block;">Frete: <b style="color: var(--card);">R$ ${viagem.frete.toFixed(2)}</b></span>
           <span style="display:block; margin-top:3px;">Custos: <b style="color: var(--danger);">- R$ ${custos.toFixed(2)}</b></span>
         </div>
-        <button class="btn-apagar-card-mini" onclick="event.stopPropagation(); excluirCaminhaoDireto('${viagem.id}')">🗑️</button>
+        <div style="display: flex; align-items: center;">
+          <button class="btn-check-mini ${classeCheck}" onclick="toggleRecebidoCaminhao('${viagem.id}', event)">✔</button>
+          <button class="btn-apagar-card-mini" onclick="event.stopPropagation(); excluirCaminhaoDireto('${viagem.id}')">🗑️</button>
+        </div>
       </div>
     </div>`;
   });
@@ -585,6 +618,39 @@ function abrirDetalhesCaminhao(id) {
   elSobrou.innerText = "R$ " + v.liquido.toFixed(2);
   elSobrou.style.color = v.liquido >= 0 ? "var(--card)" : "var(--danger)";
   document.getElementById("modal-caminhao").style.display = "flex";
+}
+
+function imprimirCobrancaIndividual() {
+  let v = dadosCaminhao.find(i => i.id === idModalAtual);
+  if(!v) return;
+  let dataF = `${v.data.split('-')[2]}/${v.data.split('-')[1]}/${v.data.split('-')[0]}`;
+
+  let html = `
+    <div style="text-align: center; border: 2px solid #000; padding: 30px; min-height: 400px; font-family: sans-serif;">
+      <h1 style="margin: 0; font-size: 24px;">FC Transportes Logistica LTDA</h1>
+      <p style="margin: 5px 0; color: #666;">Documento de Cobrança de Frete</p>
+      <hr style="margin: 20px 0;">
+      <div style="text-align: left; margin-bottom: 30px;">
+        <p style="font-size: 18px;"><b>Data do Serviço:</b> ${dataF}</p>
+        <p style="font-size: 18px;"><b>Descrição do Frete:</b></p>
+        <div style="background: #f1f1f1; padding: 15px; border-radius: 8px; font-size: 18px; text-transform: uppercase;">
+          ${v.desc}
+        </div>
+      </div>
+      <div style="text-align: right; margin-top: 40px; border-top: 1px dashed #ccc; padding-top: 20px;">
+        <span style="font-size: 18px; color: #444;">VALOR TOTAL A RECEBER:</span><br>
+        <b style="font-size: 36px; color: #000;">R$ ${v.frete.toFixed(2)}</b>
+      </div>
+      <div style="margin-top: 80px; text-align: center;">
+        <div style="border-top: 1px solid #000; width: 250px; margin: 0 auto; padding-top: 10px;">
+          Assinatura Responsável
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('print-area').innerHTML = html;
+  fecharModalCaminhao();
+  window.print();
 }
 
 function fecharModalCaminhao() { document.getElementById("modal-caminhao").style.display = "none"; }
@@ -846,11 +912,9 @@ async function confirmarExclusaoCartao(tipo) {
   }
 }
 
-// NOVA FUNÇÃO: GERA A PROJEÇÃO GERAL DE TODOS OS MESES
 function gerarProjecao() {
   let proj = {};
 
-  // Soma todas as faturas que NÃO estão pagas, separando por mês
   dadosCartoes.forEach(d => {
     if (!d.pago) {
       if (!proj[d.mes]) proj[d.mes] = 0;
@@ -861,7 +925,6 @@ function gerarProjecao() {
   let container = document.getElementById("projecao-container");
   let html = "<h3 style='margin-top:0; color: #64748b; font-size: 14px; text-transform: uppercase;'>📊 Resumo de Faturas em Aberto</h3>";
   
-  // Organiza os meses do mais antigo para o mais novo
   let mesesOrdenados = Object.keys(proj).sort();
 
   if (mesesOrdenados.length === 0) {
@@ -949,7 +1012,6 @@ function renderCartoes() {
      }
   }
 
-  // Atualiza a projeção sempre que a tela for renderizada
   gerarProjecao();
 }
 
